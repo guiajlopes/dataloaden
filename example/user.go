@@ -1,8 +1,9 @@
-//go:generate go run github.com/vektah/dataloaden UserLoader string *github.com/vektah/dataloaden/example.User
+//go:generate go run github.com/guiajlopes/dataloaden UserLoader string *github.com/guiajlopes/dataloaden/example.User
 
 package example
 
 import (
+	"context"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func NewLoader() *UserLoader {
 	return &UserLoader{
 		wait:     2 * time.Millisecond,
 		maxBatch: 100,
-		fetch: func(keys []string) ([]*User, []error) {
+		fetch: func(ctx context.Context, keys []string) ([]*User, []error) {
 			users := make([]*User, len(keys))
 			errors := make([]error, len(keys))
 
