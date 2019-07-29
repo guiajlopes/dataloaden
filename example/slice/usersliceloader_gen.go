@@ -114,11 +114,11 @@ func (l *UserSliceLoader) LoadThunk(ctx context.Context, key int) func() ([]exam
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *UserSliceLoader) LoadAll(keys []int) ([][]example.User, []error) {
+func (l *UserSliceLoader) LoadAll(ctx context.Context, keys []int) ([][]example.User, []error) {
 	results := make([]func() ([]example.User, error), len(keys))
 
 	for i, key := range keys {
-		results[i] = l.LoadThunk(key)
+		results[i] = l.LoadThunk(ctx, key)
 	}
 
 	users := make([][]example.User, len(keys))
@@ -132,10 +132,10 @@ func (l *UserSliceLoader) LoadAll(keys []int) ([][]example.User, []error) {
 // LoadAllThunk returns a function that when called will block waiting for a Users.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *UserSliceLoader) LoadAllThunk(keys []int) func() ([][]example.User, []error) {
+func (l *UserSliceLoader) LoadAllThunk(ctx context.Context, keys []int) func() ([][]example.User, []error) {
 	results := make([]func() ([]example.User, error), len(keys))
 	for i, key := range keys {
-		results[i] = l.LoadThunk(key)
+		results[i] = l.LoadThunk(ctx, key)
 	}
 	return func() ([][]example.User, []error) {
 		users := make([][]example.User, len(keys))

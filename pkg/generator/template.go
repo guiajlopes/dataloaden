@@ -124,11 +124,11 @@ func (l *{{.Name}}) LoadThunk(ctx context.Context, key {{.KeyType.String}}) func
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *{{.Name}}) LoadAll(keys []{{.KeyType}}) ([]{{.ValType.String}}, []error) {
+func (l *{{.Name}}) LoadAll(ctx context.Context, keys []{{.KeyType}}) ([]{{.ValType.String}}, []error) {
 	results := make([]func() ({{.ValType.String}}, error), len(keys))
 
 	for i, key := range keys {
-		results[i] = l.LoadThunk(key)
+		results[i] = l.LoadThunk(ctx, key)
 	}
 
 	{{.ValType.Name|lcFirst}}s := make([]{{.ValType.String}}, len(keys))
@@ -142,10 +142,10 @@ func (l *{{.Name}}) LoadAll(keys []{{.KeyType}}) ([]{{.ValType.String}}, []error
 // LoadAllThunk returns a function that when called will block waiting for a {{.ValType.Name}}s.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *{{.Name}}) LoadAllThunk(keys []{{.KeyType}}) (func() ([]{{.ValType.String}}, []error)) {
+func (l *{{.Name}}) LoadAllThunk(ctx context.Context, keys []{{.KeyType}}) (func() ([]{{.ValType.String}}, []error)) {
 	results := make([]func() ({{.ValType.String}}, error), len(keys))
  	for i, key := range keys {
-		results[i] = l.LoadThunk(key)
+		results[i] = l.LoadThunk(ctx, key)
 	}
 	return func() ([]{{.ValType.String}}, []error) {
 		{{.ValType.Name|lcFirst}}s := make([]{{.ValType.String}}, len(keys))
