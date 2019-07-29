@@ -73,14 +73,14 @@ type {{.Name|lcFirst}}Batch struct {
 }
 
 // Load a {{.ValType.Name}} by key, batching and caching will be applied automatically
-func (l *{{.Name}}) Load(key {{.KeyType.String}}) ({{.ValType.String}}, error) {
-	return l.LoadThunk(key)()
+func (l *{{.Name}}) Load(ctx context.Context, key {{.KeyType.String}}) ({{.ValType.String}}, error) {
+	return l.LoadThunk(ctx, key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a {{.ValType.Name}}.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *{{.Name}}) LoadThunk(key {{.KeyType.String}}) func() ({{.ValType.String}}, error) {
+func (l *{{.Name}}) LoadThunk(ctx context.Context, key {{.KeyType.String}}) func() ({{.ValType.String}}, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -92,7 +92,7 @@ func (l *{{.Name}}) LoadThunk(key {{.KeyType.String}}) func() ({{.ValType.String
 		l.batch = &{{.Name|lcFirst}}Batch{done: make(chan struct{})}
 	}
 	batch := l.batch
-	pos := batch.keyIndex(l, key)
+	pos := batch.keyIndex(l, ctx, key)
 	l.mu.Unlock()
 
 	return func() ({{.ValType.String}}, error) {
@@ -198,7 +198,7 @@ func (l *{{.Name}}) unsafeSet(key {{.KeyType}}, value {{.ValType.String}}) {
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *{{.Name|lcFirst}}Batch) keyIndex(l *{{.Name}}, key {{.KeyType}}) int {
+func (b *{{.Name|lcFirst}}Batch) keyIndex(l *{{.Name}}, ctx context.Context, key {{.KeyType}}) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i
@@ -215,7 +215,7 @@ func (b *{{.Name|lcFirst}}Batch) keyIndex(l *{{.Name}}, key {{.KeyType}}) int {
 		if !b.closing {
 			b.closing = true
 			l.batch = nil
-			go b.end(l)
+			go b.end(l, ctx)
 		}
 	}
 
@@ -238,8 +238,8 @@ func (b *{{.Name|lcFirst}}Batch) startTimer(l *{{.Name}}) {
 	b.end(l)
 }
 
-func (b *{{.Name|lcFirst}}Batch) end(l *{{.Name}}) {
-	b.data, b.error = l.fetch(b.keys)
+func (b *{{.Name|lcFirst}}Batch) end(l *{{.Name}}, ctx context.Context) {
+	b.data, b.error = l.fetch(ctx, b.keys)
 	close(b.done)
 }
 `))
