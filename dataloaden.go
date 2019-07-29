@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/vektah/dataloaden/pkg/generator"
+	"github.com/guiajlopes/dataloaden/pkg/generator"
 )
 
 func main() {

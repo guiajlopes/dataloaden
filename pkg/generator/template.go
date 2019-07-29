@@ -12,6 +12,7 @@ var tpl = template.Must(template.New("generated").
 package {{.Package}}
 
 import (
+    "context"
     "sync"
     "time"
 
@@ -208,7 +209,7 @@ func (b *{{.Name|lcFirst}}Batch) keyIndex(l *{{.Name}}, ctx context.Context, key
 	pos := len(b.keys)
 	b.keys = append(b.keys, key)
 	if pos == 0 {
-		go b.startTimer(l)
+		go b.startTimer(l, ctx)
 	}
 
 	if l.maxBatch != 0 && pos >= l.maxBatch-1 {
@@ -222,7 +223,7 @@ func (b *{{.Name|lcFirst}}Batch) keyIndex(l *{{.Name}}, ctx context.Context, key
 	return pos
 }
 
-func (b *{{.Name|lcFirst}}Batch) startTimer(l *{{.Name}}) {
+func (b *{{.Name|lcFirst}}Batch) startTimer(l *{{.Name}}, ctx context.Context) {
 	time.Sleep(l.wait)
 	l.mu.Lock()
 
@@ -235,7 +236,7 @@ func (b *{{.Name|lcFirst}}Batch) startTimer(l *{{.Name}}) {
 	l.batch = nil
 	l.mu.Unlock()
 
-	b.end(l)
+	b.end(l, ctx)
 }
 
 func (b *{{.Name|lcFirst}}Batch) end(l *{{.Name}}, ctx context.Context) {
